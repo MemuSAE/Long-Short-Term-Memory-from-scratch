@@ -1,4 +1,4 @@
-#  Long Short-Term Memory (LSTM) Networks
+#  Long Short-Term Memory (LSTM) Networks 
 
 Welcome! This guide breaks down the core concepts, math, and intuition behind Long Short-Term Memory (LSTM) networks. 
 

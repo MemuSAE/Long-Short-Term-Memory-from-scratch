@@ -1,81 +1,196 @@
-# Long Short-Term Memory (LSTM) Networks
+# Long Short Term Memory (LSTM)
 
-## Biological Inspiration
-[cite_start]Biology Sciences Definition of LSTM[cite: 1]. [cite_start]In biological and cognitive science, human memory distinguishes between two primary types[cite: 2]:
-* [cite_start]**Short-Term Memory (STM):** Holds limited information temporarily, typically for seconds to minutes[cite: 3, 4].
-* [cite_start]**Long-Term Memory (LTM):** Stores vast amounts of information for extended periods, ranging from days to an entire lifetime[cite: 5, 6].
+## Definition
 
-[cite_start]The same conceptual idea applies to Artificial Intelligence, which features an architecture bearing the exact same name[cite: 7, 8].
+Long short term memory refers, in biological and cognitive science, to a model of human memory that distinguishes between short term and long term storage.
 
-***
+Short term memory holds limited information for a short duration, while long term memory is capable of storing large amounts of information over extended periods.
 
-## The Problem with Normal Recurrent Neural Networks (RNN)
-Before LSTMs, traditional RNNs faced severe limitations[cite: 10, 33]:
-* [cite_start]**Vanishing Gradient:** During Backpropagation Through Time (BPTT), gradients shrink exponentially over many time steps, meaning the model cannot learn long-term dependencies[cite: 34].
-* [cite_start]**Exploding Gradient:** Gradients can become extremely large, causing unstable training and weight divergence[cite: 35].
-* **Short-Term Memory:** Because of vanishing gradients, RNNs struggle to remember information from far earlier in a sequence[cite: 36].
+The same idea is applied in artificial intelligence through an architecture called LSTM.
+
+---
+
+## Recurrent Neural Network (RNN)
+
+A recurrent neural network processes sequences step by step, maintaining a hidden state that represents previous information.
 
 ### Intuition Example
-Consider processing the sentence "The cat sat" step-by-step[cite: 37, 38, 39]:
-* [cite_start]At $t=1$: Input is "The", and memory becomes the context about "The"[cite: 40, 41, 42].
-* [cite_start]At $t=2$: Input is "cat", and memory becomes the context about "The cat"[cite: 43, 44, 45].
-* At $t=3$: Input is "sat", and memory becomes the context about the full sentence[cite: 46, 47, 48].
-Finally, the model predicts the next word from the final hidden state[cite: 49].
 
-***
+Sentence: "The cat sat"
 
-## The LSTM Architecture
-The LSTM architecture resolves these issues using three main gates[cite: 50, 55]. At each time step $t$, the inputs are the current input vector $x_{t}$, the previous hidden state $h_{t-1}$, and the previous cell state $C_{t-1}$[cite: 67, 68, 69, 70]. 
+Step by step process
 
-*Important Note: All of this happens inside one LSTM cell repeated across time, not multiple different LSTMs[cite: 132]. [cite_start]The gates are described separately for conceptual clarity[cite: 133].*
+t equals 1  
+Input is "The"  
+Memory becomes context about "The"
 
-### 1. Forget Gate
-[cite_start]This gate decides what information to remove from the previous cell state[cite: 56, 71, 72]. [cite_start]It uses a sigmoid function, outputting $0$ to forget completely or $1$ to keep completely[cite: 73, 74].
-[cite_start]$$f_{t}=\sigma(W_{f}[h_{t-1},x_{t}]+b_{f})$$ [cite: 76]
+t equals 2  
+Input is "cat"  
+Memory becomes context about "The cat"
 
-### 2. Input Gate and Candidate Memory
-[cite_start]The Input Gate decides how much new information to store, using a sigmoid function where $0$ means "do not update" and $1$ means "fully update"[cite: 60, 75, 77, 79, 80].
-[cite_start]$$i_{t}=\sigma(W_{i}[h_{t-1},x_{t}]+b_{i})$$ [cite: 78]
+t equals 3  
+Input is "sat"  
+Memory becomes context about the full sentence
 
-[cite_start]Alongside this, the Candidate Memory creates new potential values (representing new candidate information) to add to the cell state, using a tanh function that outputs values between $-1$ and $1$[cite: 81, 82, 84, 85, 89].
-[cite_start]$$C_{t}=tanh(W_{C}[h_{t-1},x_{t}]+b_{C})$$ [cite: 83]
+The model then predicts the next word based on the final hidden state.
 
-### 3. Cell State Update
-[cite_start]The core memory update happens here[cite: 90]. 
-[cite_start]$$C_{t}=f_{t}\odot C_{t-1}+i_{t}\odot\tilde{C_{t}}$$ [cite: 98]
-[cite_start]In this equation, the first term represents forgetting part of the old memory, the second term adds the new memory, and $\odot$ denotes element-wise multiplication[cite: 91].
+---
 
-### 4. Output Gate
-[cite_start]The Output Gate controls what information becomes the output using a sigmoid function[cite: 92, 94, 95].
-[cite_start]$$o_{t}=\sigma(W_{o}[h_{t-1},x_{t}]+b_{o})$$ [cite: 99]
+## Problem with RNN
 
-[cite_start]The Hidden State is then computed as[cite: 93, 113]:
-[cite_start]$$h_{t}=o_{t}\odot tanh(C_{t})$$ [cite: 100, 120]
+RNNs suffer from two major issues during training.
 
-[cite_start]At each time step, the LSTM produces a vector of a fixed dimension that acts as a contextual representation of everything remembered up to time $t$[cite: 97, 101, 102, 103]. [cite_start]Mathematically, $h_{t}\in\mathbb{R}^{n}$[cite: 121].
+Vanishing gradient  
+Gradients shrink over time, making it difficult for the model to learn long term dependencies.
 
-***
+Exploding gradient  
+Gradients grow excessively, leading to unstable training.
 
-## Internal Memory vs. Output Memory
-[cite_start]LSTMs maintain two distinct memory states[cite: 104]:
+As a result, RNNs struggle to remember information from earlier in long sequences.
 
-1. [cite_start]**Cell State (Long-Term Memory):** $C_{t}$ stores long-term information and decides what is remembered or forgotten[cite: 105, 106, 107, 108]. [cite_start]It flows through time with minimal modification[cite: 109].
-2. [cite_start]**Hidden State (Short-Term / Output Memory):** $h_{t}$ is passed to the next time step and the output layer[cite: 111, 112, 113]. 
+---
 
-[cite_start]Conceptually, at time step $t$, the hidden state encodes which words were forgotten, which words were remembered, and the current context of the sequence[cite: 114, 115, 116, 117, 118, 119]. [cite_start]For example, in the sentence "The movie was not good", at the word "good", $h_{t}$ heavily encodes the influence of "not"[cite: 122, 123, 124]. [cite_start]This works because the forget gate removes irrelevant memory, the input gate adds useful information, and the output gate selects what becomes visible[cite: 126, 127, 128, 129, 130, 131].
+## Long Short Term Memory (LSTM)
 
-***
+LSTM is designed to solve the limitations of RNN by introducing a structured memory system.
 
-## LSTM in Sequence-to-Sequence (Seq2Seq) Models
-LSTMs are powerful when used as Encoders and Decoders in Seq2Seq architectures[cite: 134].
+At each time step, the model receives
 
-### The Encoder
-The encoder reads the input sequence to represent the compressed context[cite: 135, 142, 143]. Its intuition is to forget unimportant details, keep important events, and refine understanding[cite: 144, 145, 146, 147]. By the end of the sequence, $h_{T}$ represents your final understanding of the input[cite: 148].
+x_t which represents the current input  
+h_(t minus 1) which represents the previous hidden state  
+C_(t minus 1) which represents the previous cell state  
 
-### The Decoder
-The encoder's final state $h_{T}$ is passed to the decoder, acting as a summarized context and filtered memory of the important information[cite: 152, 164, 165, 166, 167]. It is much like explaining a movie after watching it by summarizing only the important parts[cite: 168].
+---
 
-The decoder LSTM is initialized using the final states from the encoder[cite: 169, 170]:
-$$h_{0}^{(dec)}=h_{T}^{(enc)},C_{0}^{(dec)}=C_{T}^{(enc)}$$ [cite: 172]
+## Gates in LSTM
 
-Given the previous predicted word $y_{t-1}$, the decoder generates the next sequence by calculating the probability $P(y_{t}|h_{t}^{(dec)})$[cite: 171, 173].
+LSTM uses gates to control the flow of information.
+
+### Forget Gate
+
+This gate decides what information should be removed from the previous cell state.
+
+f_t equals sigma of W_f multiplied by the concatenation of h_(t minus 1) and x_t plus b_f
+
+The output ranges between 0 and 1  
+0 means complete forgetting  
+1 means complete retention  
+
+---
+
+### Input Gate
+
+This gate determines how much new information should be added.
+
+i_t equals sigma of W_i multiplied by the concatenation of h_(t minus 1) and x_t plus b_i
+
+#### Candidate Memory
+
+A new candidate state is created using
+
+C_t tilde equals tanh of W_C multiplied by the concatenation of h_(t minus 1) and x_t plus b_C
+
+---
+
+### Cell State Update
+
+The new cell state is computed by combining the old memory and the new candidate.
+
+C_t equals f_t multiplied element wise with C_(t minus 1) plus i_t multiplied element wise with C_t tilde
+
+This step represents forgetting old information and adding new information.
+
+---
+
+### Output Gate
+
+This gate controls what part of the memory becomes visible as output.
+
+o_t equals sigma of W_o multiplied by the concatenation of h_(t minus 1) and x_t plus b_o
+
+The hidden state is then computed as
+
+h_t equals o_t multiplied element wise with tanh of C_t
+
+---
+
+## Memory Representation
+
+Cell state represents long term memory. It carries information across time with minimal changes.
+
+Hidden state represents short term memory. It is used as the output at each step and passed forward.
+
+At any time step, the hidden state encodes the contextual understanding of the sequence up to that point.
+
+---
+
+## Conceptual Meaning
+
+The model continuously decides
+
+which information to forget  
+which information to keep  
+which information to output  
+
+This allows it to maintain a meaningful representation of the sequence.
+
+---
+
+## Example
+
+Sentence: "The movie was not good"
+
+When processing the word "good", the model still retains the influence of "not".
+
+This happens because the cell state preserves important context over time.
+
+---
+
+## Important Note
+
+All operations occur within a single LSTM cell that is repeated across time steps.
+
+The gates are described separately only for conceptual understanding.
+
+---
+
+## LSTM in Sequence to Sequence Models
+
+LSTM is commonly used in encoder decoder architectures.
+
+### Encoder
+
+The encoder reads the input sequence from x1 to xT and produces final states h_T and C_T.
+
+These states represent a compressed understanding of the entire sequence.
+
+---
+
+### Decoder
+
+The decoder uses the encoder states to generate the output sequence step by step.
+
+The initial states of the decoder are set as
+
+h_0 of decoder equals h_T of encoder  
+C_0 of decoder equals C_T of encoder  
+
+At each step, the decoder predicts the next output based on its current hidden state.
+
+---
+
+## Intuition
+
+The process is similar to watching a movie and then explaining it.
+
+Only the most important information is retained and passed forward.
+
+---
+
+## Summary
+
+LSTM improves upon traditional RNNs by introducing controlled memory mechanisms.
+
+It effectively handles long term dependencies and produces stable training behavior.
+
+This makes it a fundamental model for sequence based tasks such as language modeling and translation.
